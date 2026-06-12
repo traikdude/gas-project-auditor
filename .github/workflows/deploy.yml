@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -15,15 +18,32 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install clasp
-        run: npm install -g @google/clasp
+        run: npm install -g @google/clasp@2.4.2
 
       - name: Restore clasp credentials
-        run: echo "$CLASPRC_JSON" > ~/.clasprc.json
+        run: |
+          # clasp v2 reads from ~/.clasprc.json
+          # clasp v3 reads from ~/.config/clasp/credentials.json
+          # Write to both locations to support either version
+          mkdir -p ~/.config/clasp
+          echo "$CLASPRC_JSON" > ~/.clasprc.json
+          echo "$CLASPRC_JSON" > ~/.config/clasp/credentials.json
+          echo "Credentials written to both locations"
+          ls -la ~/.clasprc.json ~/.config/clasp/credentials.json
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
 
+      - name: Verify clasp auth
+        run: clasp --version && echo "Clasp ready"
+
       - name: Push to Apps Script
         run: clasp push --force
+
+      - name: Report success
+        if: success()
+        run: |
+          echo "✅ Successfully pushed to Apps Script project:"
+          echo "   Script ID: $(cat .clasp.json | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"scriptId\"])')"
