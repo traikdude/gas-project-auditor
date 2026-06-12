@@ -29,16 +29,17 @@ var CONFIG = {
   SCRIPT_ID: '1TSn9NbYuw1Vt3Qod1d9iccX0t_YL_4oWnTniG2dCoRywyQHRxiKjUL94',
 
   /**
-   * The Script ID of the MASTER dashboard spreadsheet (container-bound script).
-   * When set, runFullAudit() writes its output tabs directly into that
-   * spreadsheet instead of creating a new one on every run.
+   * The SPREADSHEET ID of the master dashboard (the Google Sheets file itself).
+   * runFullAudit() opens this spreadsheet directly and adds its output tabs
+   * there instead of creating a new spreadsheet on every run.
    *
-   * Set to '' (empty string) to revert to auto-create-new-sheet behaviour.
+   * This is the Drive file ID from the spreadsheet URL:
+   *   https://docs.google.com/spreadsheets/d/<THIS_ID>/edit
    *
-   * Value: script ID of the master Apps Script project whose PARENT
-   * spreadsheet will receive the audit tabs.
+   * Confirmed: "Sheets Layout Engine" spreadsheet (the master dashboard).
+   * Set to '' to revert to auto-create-new-sheet behaviour.
    */
-  MASTER_SCRIPT_ID: '1t21ubO55WZs2nQn-ePJ6-g7iQA4fss-rHYOzVbz1-wvCjVP5Hh-5DqFJ',
+  MASTER_SPREADSHEET_ID: '1iQNkZKmv4G9sz9BaPwwbrrw67DTaMPsT_7sJZsDb-Ow',
 
   // ── Output / Sheet identity ──────────────────────────────────────────────
 

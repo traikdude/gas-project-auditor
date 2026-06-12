@@ -309,18 +309,19 @@ function runFullAudit() {
   var ss;
   var isExistingSheet = false;
 
-  if (CONFIG.MASTER_SCRIPT_ID) {
-    ss = _resolveTargetSpreadsheet_(CONFIG.MASTER_SCRIPT_ID);
-    if (ss) {
+  if (CONFIG.MASTER_SPREADSHEET_ID) {
+    try {
+      ss = SpreadsheetApp.openById(CONFIG.MASTER_SPREADSHEET_ID);
       isExistingSheet = true;
-      Logger.log('[Audit] Using existing master spreadsheet: %s', ss.getUrl());
-    } else {
-      Logger.log('[Audit] WARNING: Could not resolve master spreadsheet from MASTER_SCRIPT_ID. Creating a new sheet.');
+      Logger.log('[Audit] ✅ Opened master spreadsheet: "%s" (%s)', ss.getName(), ss.getUrl());
+    } catch (openErr) {
+      Logger.log('[Audit] WARNING: Could not open master spreadsheet id=%s: %s — falling back to new sheet.',
+                 CONFIG.MASTER_SPREADSHEET_ID, openErr.message);
     }
   }
 
   if (!ss) {
-    // Fallback: create a new sheet (original behaviour)
+    // Fallback: create a new sheet
     var timestamp = Utilities.formatDate(
       new Date(),
       Session.getScriptTimeZone(),
