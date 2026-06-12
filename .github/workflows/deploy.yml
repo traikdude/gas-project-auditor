@@ -21,29 +21,24 @@ jobs:
           node-version: '20'
 
       - name: Install clasp
-        run: npm install -g @google/clasp@2.4.2
+        run: npm install -g @google/clasp
 
       - name: Restore clasp credentials
         run: |
-          # clasp v2 reads from ~/.clasprc.json
-          # clasp v3 reads from ~/.config/clasp/credentials.json
-          # Write to both locations to support either version
+          # clasp v3.x stores credentials in ~/.clasprc.json as { "tokens": {...} }
+          # Write to both standard locations
           mkdir -p ~/.config/clasp
-          echo "$CLASPRC_JSON" > ~/.clasprc.json
-          echo "$CLASPRC_JSON" > ~/.config/clasp/credentials.json
-          echo "Credentials written to both locations"
-          ls -la ~/.clasprc.json ~/.config/clasp/credentials.json
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          printf '%s' "$CLASPRC_JSON" > ~/.config/clasp/credentials.json
+          echo "✅ Credentials written"
+          echo "File size: $(wc -c < ~/.clasprc.json) bytes"
+          echo "Top-level keys: $(cat ~/.clasprc.json | python3 -c 'import sys,json;d=json.load(sys.stdin);print(list(d.keys()))')"
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
 
-      - name: Verify clasp auth
-        run: clasp --version && echo "Clasp ready"
-
       - name: Push to Apps Script
-        run: clasp push --force
-
-      - name: Report success
-        if: success()
+        working-directory: ${{ github.workspace }}
         run: |
-          echo "✅ Successfully pushed to Apps Script project:"
-          echo "   Script ID: $(cat .clasp.json | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"scriptId\"])')"
+          echo "Script ID: $(cat .clasp.json | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"scriptId\"])')"
+          clasp push --force
+          echo "✅ Push complete"
