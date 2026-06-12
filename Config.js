@@ -13,6 +13,21 @@
 /** @type {Object} CONFIG — Single source of truth for auditor settings. */
 var CONFIG = {
 
+  // ── Project Identity (PERMANENT — do NOT remove or change) ───────────────
+
+  /**
+   * Google Cloud Platform project number linked to this Apps Script project.
+   * Set in GAS Editor → Project Settings → GCP Project: 825046261103
+   * This MUST remain consistent across all clasp pushes and deployments.
+   */
+  GCP_PROJECT_NUMBER: '825046261103',
+
+  /**
+   * The Apps Script Script ID for the GAS Project Auditor.
+   * Used for self-referencing, API calls, and deployment verification.
+   */
+  SCRIPT_ID: '1TSn9NbYuw1Vt3Qod1d9iccX0t_YL_4oWnTniG2dCoRywyQHRxiKjUL94',
+
   // ── Output / Sheet identity ──────────────────────────────────────────────
 
   /** Prefix applied to every generated audit sheet tab name. */
