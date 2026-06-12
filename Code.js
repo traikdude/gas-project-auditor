@@ -305,21 +305,35 @@ function runFullAudit() {
   var execStart   = Date.now();
   var scriptProps = PropertiesService.getScriptProperties();
 
-  // ---- Create output spreadsheet -----------------------------------------
-  var timestamp = Utilities.formatDate(
-    new Date(),
-    Session.getScriptTimeZone(),
-    'yyyy-MM-dd HH:mm'
-  );
-  var ssName = 'GAS Audit \u2014 ' + timestamp;
-
+  // ---- Resolve or create output spreadsheet --------------------------------
   var ss;
-  try {
-    ss = SpreadsheetApp.create(ssName);
-    Logger.log('[Audit] Created spreadsheet: %s | URL: %s', ssName, ss.getUrl());
-  } catch (createErr) {
-    Logger.log('[Audit] FATAL: Could not create spreadsheet: %s', createErr.message);
-    throw createErr;
+  var isExistingSheet = false;
+
+  if (CONFIG.MASTER_SCRIPT_ID) {
+    ss = _resolveTargetSpreadsheet_(CONFIG.MASTER_SCRIPT_ID);
+    if (ss) {
+      isExistingSheet = true;
+      Logger.log('[Audit] Using existing master spreadsheet: %s', ss.getUrl());
+    } else {
+      Logger.log('[Audit] WARNING: Could not resolve master spreadsheet from MASTER_SCRIPT_ID. Creating a new sheet.');
+    }
+  }
+
+  if (!ss) {
+    // Fallback: create a new sheet (original behaviour)
+    var timestamp = Utilities.formatDate(
+      new Date(),
+      Session.getScriptTimeZone(),
+      'yyyy-MM-dd HH:mm'
+    );
+    var ssName = 'GAS Audit \u2014 ' + timestamp;
+    try {
+      ss = SpreadsheetApp.create(ssName);
+      Logger.log('[Audit] Created new spreadsheet: %s | URL: %s', ssName, ss.getUrl());
+    } catch (createErr) {
+      Logger.log('[Audit] FATAL: Could not create spreadsheet: %s', createErr.message);
+      throw createErr;
+    }
   }
 
   var auditSheet = initializeSheet(ss);
@@ -657,6 +671,62 @@ function _appendLog(logSheet, level, message) {
     logSheet.appendRow([ts, level, message]);
   } catch (logErr) {
     Logger.log('[AppendLog] Could not write to log sheet: %s', logErr.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// TARGET SPREADSHEET RESOLUTION
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves a spreadsheet reference from either a Spreadsheet ID or a Script ID.
+ *
+ * Strategy:
+ *   1. Try SpreadsheetApp.openById(id) directly — works if id IS a spreadsheet ID.
+ *   2. If that fails, treat id as a Script ID and use Drive.Files.get() to find
+ *      its parent, then open that parent as a spreadsheet.
+ *
+ * @private
+ * @param  {string} id  A Google Drive file ID — either a Spreadsheet ID or
+ *                      a container-bound Apps Script Script ID.
+ * @return {Spreadsheet|null}  The resolved SpreadsheetApp spreadsheet, or null
+ *                             if resolution fails.
+ */
+function _resolveTargetSpreadsheet_(id) {
+  if (!id) return null;
+
+  // ── Attempt 1: treat as spreadsheet ID directly ─────────────────────────
+  try {
+    var ss = SpreadsheetApp.openById(id);
+    Logger.log('[Resolve] Opened spreadsheet directly by ID: %s', id);
+    return ss;
+  } catch (e1) {
+    Logger.log('[Resolve] openById(%s) failed (%s) — trying parent resolution.', id, e1.message);
+  }
+
+  // ── Attempt 2: treat as script ID, find parent spreadsheet via Drive ─────
+  try {
+    var fileMeta = Drive.Files.get(id, {
+      fields: 'id, name, parents, mimeType',
+      supportsAllDrives: true
+    });
+
+    var parents = fileMeta.parents || [];
+    if (parents.length === 0) {
+      Logger.log('[Resolve] Script ID %s has no parents — cannot resolve spreadsheet.', id);
+      return null;
+    }
+
+    var parentId = parents[0];
+    Logger.log('[Resolve] Script %s parent is %s — opening as spreadsheet.', id, parentId);
+
+    var parentSs = SpreadsheetApp.openById(parentId);
+    Logger.log('[Resolve] Successfully opened parent spreadsheet: %s', parentSs.getName());
+    return parentSs;
+
+  } catch (e2) {
+    Logger.log('[Resolve] Parent resolution failed for id=%s: %s', id, e2.message);
+    return null;
   }
 }
 

@@ -28,6 +28,18 @@ var CONFIG = {
    */
   SCRIPT_ID: '1TSn9NbYuw1Vt3Qod1d9iccX0t_YL_4oWnTniG2dCoRywyQHRxiKjUL94',
 
+  /**
+   * The Script ID of the MASTER dashboard spreadsheet (container-bound script).
+   * When set, runFullAudit() writes its output tabs directly into that
+   * spreadsheet instead of creating a new one on every run.
+   *
+   * Set to '' (empty string) to revert to auto-create-new-sheet behaviour.
+   *
+   * Value: script ID of the master Apps Script project whose PARENT
+   * spreadsheet will receive the audit tabs.
+   */
+  MASTER_SCRIPT_ID: '1t21ubO55WZs2nQn-ePJ6-g7iQA4fss-rHYOzVbz1-wvCjVP5Hh-5DqFJ',
+
   // ── Output / Sheet identity ──────────────────────────────────────────────
 
   /** Prefix applied to every generated audit sheet tab name. */

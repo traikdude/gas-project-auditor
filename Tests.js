@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =============================================================================
  * GAS PROJECT AUDITOR — PREFLIGHT VALIDATION HARNESS
  * File: Tests.js
@@ -354,18 +354,31 @@ function checkExecutionEnvironment() {
   }
 
   // 3. Spreadsheet Create/Delete (Sheets scope)
+  var tempId = null;
   try {
-    var tempSheet = SpreadsheetApp.create("__GAS_Auditor_Preflight_Temp__");
-    var tempId = tempSheet.getId();
+    var tempName = '__GAS_Auditor_Preflight_' + Date.now() + '__';
+    var tempSheet = SpreadsheetApp.create(tempName);
+    tempId = tempSheet.getId();
+    var cleanedUp = false;
+
+    // Try permanent delete first (Drive.Files.remove bypasses Trash)
     try {
       Drive.Files.remove(tempId);
-      details.push("SpreadsheetApp.create() + Drive.Files.remove(): OK");
-    } catch (deleteErr) {
-      details.push("SpreadsheetApp.create(): OK (cleanup failed: " + deleteErr.message + ")");
+      cleanedUp = true;
+      details.push('SpreadsheetApp.create() + cleanup: OK (permanently deleted)');
+    } catch (removeErr) {
+      // Fallback: move to Trash — better than leaving it in root
+      try {
+        Drive.Files.update({ trashed: true }, tempId);
+        cleanedUp = true;
+        details.push('SpreadsheetApp.create() + cleanup: OK (moved to Trash)');
+      } catch (trashErr) {
+        details.push('SpreadsheetApp.create(): OK (WARNING: cleanup failed — temp sheet "' + tempName + '" may remain in Drive. Delete it manually.)');
+      }
     }
   } catch (e) {
-    issues.push("SpreadsheetApp.create() threw: " + e.message +
-                " -- ensure https://www.googleapis.com/auth/spreadsheets scope is in manifest.");
+    issues.push('SpreadsheetApp.create() threw: ' + e.message +
+                ' -- ensure https://www.googleapis.com/auth/spreadsheets scope is in manifest.');
   }
 
   var pass = issues.length === 0;
