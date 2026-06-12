@@ -1,5 +1,4 @@
-.clasp.json
-~/.clasprc.json
+﻿~/.clasprc.json
 *.env
 node_modules/
 dist/
