@@ -23,9 +23,9 @@ request conflict, stop and ask.
    agent's report is not proof.
 6. **Generated files come from their generator.** Do not hand-edit build output
    or generated projections; regenerate them from their source.
-7. **Never scan OneDrive.** Do not search, list or traverse
-   `C:\Users\traik\OneDrive\**` (or its `/mnt/c` form); it rehydrates cloud
-   files and has crashed the machine.
+7. **OneDrive is gone.** It was uninstalled on 2026-10-13, so the old no-scan
+   rule is retired. If `C:\Users\traik\OneDrive` (or its `/mnt/c` form) ever
+   reappears, stop and ask Erik before scanning it.
 8. **Personal data is read-only.** Do not edit, move or publish personal notes,
    finance records or contact data unless the task is explicitly about them.
 
